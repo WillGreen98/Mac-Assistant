@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>AMApplicationBuild</key>
+	<string>428</string>
+	<key>AMApplicationVersion</key>
+	<string>2.7</string>
+	<key>AMDocumentVersion</key>
+	<string>2</string>
+	<key>actions</key>
+	<array>
+		<dict>
+			<key>action</key>
+			<dict>
+				<key>AMAccepts</key>
+				<dict>
+					<key>Container</key>
+					<string>List</string>
+					<key>Optional</key>
+					<true/>
+					<key>Types</key>
+					<array>
+						<string>com.apple.applescript.object</string>
+					</array>
+				</dict>
+				<key>AMActionVersion</key>
+				<string>1.0.2</string>
+				<key>AMApplication</key>
+				<array>
+					<string>Automator</string>
+				</array>
+				<key>AMParameterProperties</key>
+				<dict>
+					<key>source</key>
+					<dict/>
+				</dict>
+				<key>AMProvides</key>
+				<dict>
+					<key>Container</key>
+					<string>List</string>
+					<key>Types</key>
+					<array>
+						<string>com.apple.applescript.object</string>
+					</array>
+				</dict>
+				<key>ActionBundlePath</key>
+				<string>/System/Library/Automator/Run AppleScript.action</string>
+				<key>ActionName</key>
+				<string>Run AppleScript</string>
+				<key>ActionParameters</key>
+				<dict>
+					<key>source</key>
+					<string>-- sets variables for battery sectionproperty battery_Power_Low : 20property battery_Power_Full : 99property battery_Power_Full_Charged : 100on window_Open(usr_window_name)	tell application "System Events" to window_Open of "V2"	tell the application		activate		set theWindow to the first item of usr_window_name		if the index of theWindow is not 1 then			set the index of theWindow to 2		else			tell application "System Events"				tell application process "V2"					keystroke "`" using command down				end tell			end tell		end if	end tellend window_Openon run		-- Time of day greeting	tell application "Finder"		-- Gets user info and date time properties 		set usrName to (do shell script "whoami")		set currentTime_Hours to (hours of (current date) as string)		set currentTime_Minutes to (minutes of (current date) as string)		set currentTime_Seconds to (seconds of (current date) as string)				set volume output volume 30				if the time of (the current date) &gt; 0 and the time of (the current date) &lt; 43200 then			say "Good Morning " &amp; usrName &amp; ", it is currently. " &amp; currentTime_Hours &amp; ":" &amp; currentTime_Minutes -- &amp; ":" &amp; currentTime_Seconds (instead use time as string of (current date))		else if the the time of (the current date) is greater than or equal to 43200 and the time of (the current date) is less than 61200 then			say "Good Afternoon " &amp; usrName &amp; ", it is currently. " &amp; currentTime_Hours &amp; ":" &amp; currentTime_Minutes -- &amp; ":" &amp; currentTime_Seconds		else			say "Good Evening " &amp; usrName &amp; ", it is currently. " &amp; currentTime_Hours &amp; ":" &amp; currentTime_Minutes -- &amp; ":" &amp; currentTime_Seconds		end if	end tell -- end of Time of day greeting		-- User input for desicion window	say "Would you like more information?"	display dialog "Would you like more information?" buttons {"Yes", "No"} default button 1	if result = {button returned:"Yes"} then		say "Yes"				set battery_Info to (do shell script "pmset -g ps")				if battery_Info contains "InternalBattery" then			set {TID, text item delimiters} to {text item delimiters, ";"}			set battery_Info to text items of battery_Info						--set battery_Power_input to item 1 of battery_Info as string -- power type			set battery_Charging to item 2 of battery_Info --as string -- charging true or false			--set battery_Remaining_time to item 3 of battery_Info as string -- time left						set text item delimiters to tab			set battery_Info to text 1 thru -2 of last text item of item 1 of battery_Info as integer -- gets power info of pmset... command			set text item delimiters to TID						display notification battery_Charging &amp; " - " &amp; battery_Info &amp; "%"						if (battery_Charging contains " charging") then				set isCharging to " and charging"			else				set isCharging to " Feed me Power!"			end if -- end of battery_Charging if						if battery_Charging = " charging" then				set battery_Info_Say_True to " Battery on " &amp; battery_Info &amp; " percent " &amp; isCharging				say battery_Info_Say_True			else				set battery_Info_Say_False to " Battery on " &amp; battery_Info &amp; " percent " &amp; isCharging				say battery_Info_Say_False			end if -- end of battery_Info_Say if						if battery_Info &lt; battery_Power_Low then				say "Feed me Power bitch!"			else if battery_Power_Full = true then				beep (2)				say "Battery Fully Charged"			end if -- end of Battery say		end if -- end of battery if				tell application "Mail"			check for new mail			activate			delay (4)			check for new mail			set messCount_Mail to unread count of inbox						tell application "Finder"				say "There are " &amp; messCount_Mail &amp; " Emails in your inbox"								--	tell application "System Events"				--		--click menu item "New Window" of menu "Shell" of menu bar 1				--		set frontmost of process "V2" to true				--	end tell								display dialog "Would you like to send an email?" with title ("Emails") buttons {"Yes", "No"} default button 2												--window_Open("Emails")								if result = {button returned:"Yes"} then					say "yes"					tell application "Mail"						display dialog "Enter Address" default answer "example@hotmail.com"						set usrAnswer_Email to text returned of result												display dialog "Enter Subject" default answer "Subject"						set usrAnswer_Email_Subject to text returned of result												display dialog "Enter Message" default answer "Hey you sexy beast!"						set usrAnswer_Email_Mess to text returned of result												set msg to make new outgoing message with properties {subject:usrAnswer_Email_Subject, content:usrAnswer_Email_Mess, visible:true}						tell msg to make new to recipient at end of every to recipient with properties {address:usrAnswer_Email}												send msg					end tell				else					say "no"				end if -- end of mail window if			end tell -- end Mail finder Tell						if messCount_Mail = 0 then				-- do nothing, waste of code but how my mind worked			else				if messCount_Mail = 1 then					say "Would you like to mark the Email as red?"					display dialog "Would you like to mark the Email as read?" with title ("Emails") buttons {"Yes", "No"} default button 1				else					say "Would you like to mark all Emails as red?"					display dialog "Would you like to mark all Emails as read?" with title ("Emails") buttons {"Yes", "No"} default button 1					if result = {button returned:"Yes"} then						--with timeout of 120 seconds find method of getting until 0 						tell application "Mail"							set read status of every message of inbox where its read status = false to true							set read status of every message of every mailbox where its read status = false to true							set read status of every message of every mailbox of every account where its read status = false to true						end tell -- end second mail tells						--end timeout -- end for timeout 					end if -- end second if				end if			end if		end tell -- end Mail tell				-- code for file to see if first login of day		set currentDate to short date string of (current date) -- set date		set configFile to ((path to home folder as string) &amp; ".yourApp") -- get file				try			set previousContent to (read file configFile)		on error			set previousContent to ""		end try				-- write to file with current date		try			set fileRef to open for access file configFile with write permission			set eof of fileRef to 0			write currentDate to fileRef starting at eof			close access fileRef		end try				if currentDate is previousContent then			display dialog "Not first login today - No Calendar" with title ("Calendar") buttons {"Okay"} default button 1		else			tell application "Calendar"				set time_Yesterday to ((current date) - 60 * 60 * 24)				set time_Today to current date				set time_Tomorrow to ((current date) + 60 * 60 * 24)								set all_Calendars to every calendar				set event_Counter to 0								repeat with my_Calendar in all_Calendars					tell my_Calendar to set my_Events to (every event whose (start date is greater than or equal to time_Today) and (start date is less than or equal to time_Tomorrow))					set event_Counter to event_Counter + (count of my_Events)				end repeat								if event_Counter = 0 or event_Counter &gt; 1 then					display notification event_Counter					say "There are"					say event_Counter					say " Events"									else					display notification event_Counter					say "There is"					say event_Counter					say " Event"				end if			end tell		end if -- end of if to file				display dialog "Would you like me to do anything else? Perhaps open an application." default answer "Type Application name" buttons {"Open", "No"} default button 1		set usrAnswer_App to text returned of result				if result = {button returned:"Open"} then			tell application usrAnswer_App to activate		end if			else -- else to if for "User input for desicion window"		say "Goodbye good sir!"	end ifend run</string>
+				</dict>
+				<key>BundleIdentifier</key>
+				<string>com.apple.Automator.RunScript</string>
+				<key>CFBundleVersion</key>
+				<string>1.0.2</string>
+				<key>CanShowSelectedItemsWhenRun</key>
+				<false/>
+				<key>CanShowWhenRun</key>
+				<true/>
+				<key>Category</key>
+				<array>
+					<string>AMCategoryUtilities</string>
+				</array>
+				<key>Class Name</key>
+				<string>RunScriptAction</string>
+				<key>InputUUID</key>
+				<string>9AE63B49-7B01-415F-BFFC-3E46C17F7479</string>
+				<key>Keywords</key>
+				<array>
+					<string>Run</string>
+				</array>
+				<key>OutputUUID</key>
+				<string>DC344EAE-ECA1-4F8C-8B57-87D03CBD345B</string>
+				<key>UUID</key>
+				<string>BBF7247F-AC82-4CA6-8593-ACA50FC6CF60</string>
+				<key>UnlocalizedApplications</key>
+				<array>
+					<string>Automator</string>
+				</array>
+				<key>arguments</key>
+				<dict>
+					<key>0</key>
+					<dict>
+						<key>default value</key>
+						<string>on run {input, parameters}
+	
+	(* Your script goes here *)
+	
+	return input
+end run</string>
+						<key>name</key>
+						<string>source</string>
+						<key>required</key>
+						<string>0</string>
+						<key>type</key>
+						<string>0</string>
+						<key>uuid</key>
+						<string>0</string>
+					</dict>
+				</dict>
+				<key>conversionLabel</key>
+				<integer>0</integer>
+				<key>isViewVisible</key>
+				<true/>
+				<key>location</key>
+				<string>366.000000:316.000000</string>
+				<key>nibPath</key>
+				<string>/System/Library/Automator/Run AppleScript.action/Contents/Resources/Base.lproj/main.nib</string>
+			</dict>
+			<key>isViewVisible</key>
+			<true/>
+		</dict>
+	</array>
+	<key>connectors</key>
+	<dict/>
+	<key>workflowMetaData</key>
+	<dict>
+		<key>workflowTypeIdentifier</key>
+		<string>com.apple.Automator.application</string>
+	</dict>
+</dict>
+</plist>
